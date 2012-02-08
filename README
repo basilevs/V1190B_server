@@ -1,0 +1,39 @@
+V1190B_server runs on BIVME2 VME controller, performs initialization and retrieves data from V1190B Caen time-digit converter,
+
+COMPILATION
+The server can be compiled with .
+The file with this framework is usually called powerpc-sdk-linux-v4.tgz
+Compilation instructions:
+1. tar -xzf powerpc-sdk-linux-v4.tgz
+2. export PPC860_BASE=`pwd`/ppc860
+3. cd folder_V1190B
+4. make Release
+
+The last step will create an executable V1190B_server in Release subfiolder.
+
+INSTALL
+Server can be copied to BIVME2 and registed with xinetd throug it's configuration files.
+The actual configuration may look like:
+/etc/xinetd.d/daq:
+service daq
+{
+    socket_type     =  stream
+    wait            =  no
+    user            =  root
+    server          =  /home/bin/daq
+    log_on_success  += DURATION USERID
+    log_on_failure  += USERID
+    type            =  UNLISTED
+    disable         =  no
+    port            =  1055
+}
+
+/home/bin/daq:
+#!/bin/sh
+killall -SIGINT V1190B_server > /dev/null 2>/dev/null
+/home/bin/V1190B_server 2>/tmp/beam_daq.log
+# Error output redirection is neccessary to keep binary stream on standard one intact.  
+
+USAGE
+After xinetd restart it should accept connections on port 1055 and transmit binary data from  V1190B_server to connected clients.
+V1190B_client to connect and interpret.
