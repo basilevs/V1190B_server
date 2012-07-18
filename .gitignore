@@ -1,0 +1,6 @@
+*~
+*.d.?????
+beam_daq
+test_fwrite
+Release
+Debug

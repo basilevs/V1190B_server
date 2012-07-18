@@ -1,0 +1,4 @@
+#Sat Jan 16 17:29:48 NOVT 2010
+eclipse.preferences.version=1
+environment/project/cdt.managedbuild.config.gnu.exe.debug.801132969=<?xml version\="1.0" encoding\="UTF-8" standalone\="no"?>\n<environment append\="true" appendContributed\="true">\n<variable delimiter\=";" name\="PPC860_BASE" operation\="append" value\="/home/gulevich/development/bivme2/ppc860"/>\n</environment>\n
+environment/project/cdt.managedbuild.config.gnu.exe.release.660590005=<?xml version\="1.0" encoding\="UTF-8" standalone\="no"?>\n<environment append\="true" appendContributed\="true">\n<variable delimiter\=";" name\="PPC860_BASE" operation\="append" value\="/home/gulevich/development/bivme2/ppc860"/>\n</environment>\n
