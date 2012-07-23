@@ -12,7 +12,7 @@ Compilation instructions:
 The last step will create an executable V1190B_server in Release subfiolder.
 
 INSTALL
-Server can be copied to BIVME2 and registed with xinetd throug it's configuration files.
+Server can be copied to BIVME2 and registed with xinetd through it's configuration files.
 The actual configuration may look like:
 /etc/xinetd.d/daq:
 service daq
@@ -37,3 +37,7 @@ killall -SIGINT V1190B_server > /dev/null 2>/dev/null
 USAGE
 After xinetd restart it should accept connections on port 1055 and transmit binary data from  V1190B_server to connected clients.
 V1190B_client to connect and interpret.
+
+
+
+

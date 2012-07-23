@@ -1,0 +1,5 @@
+#!/bin/sh
+
+killall -SIGINT V1190B_server > /dev/null 2>/dev/null
+/tmp/V1190B_server 2>/tmp/beam_daq.log
+

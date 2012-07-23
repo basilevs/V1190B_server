@@ -1,0 +1,22 @@
+#!/bin/sh
+SOURCEDIR=`dirname $0`
+cp "$SOURCEDIR/daq" /tmp
+cp "$SOURCEDIR/V1190B_server" /tmp
+
+cat > /etc/xinetd.d/daq <<EOF
+service daq
+{
+        socket_type             = stream
+        wait                    = no
+        user                    = root
+        server                  = /tmp/daq
+        log_on_success          += DURATION USERID
+        log_on_failure          += USERID
+        type                    =  UNLISTED
+        disable                 = no
+        port = 1055
+}
+EOF
+
+kill -SIGHUP `cat /tmp/xinetd.pid`
+

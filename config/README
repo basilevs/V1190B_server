@@ -1,0 +1,16 @@
+This folder contains files related to BIVME2 VME controller configuration.
+
+For the controller to initialize V1190B readout infrastructure,
+it should be configured  to mount  this folder and execute init script from it.
+
+daq
+Script starts up a server and manages input-output streams of server.
+To prevent concurrent interaction with V1190B module, previous service instance is killed.
+It relies on the fact that V1190B server will lie in the same folder.
+
+init
+Is executed by controller from mounted NFS folder.
+Copies daq script and V1190B server binary to the controller.
+Configures xinetd, sends SIGHUP.  
+
+ 
