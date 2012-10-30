@@ -1,4 +1,17 @@
-#Sat Jan 16 17:29:48 NOVT 2010
+#Tue Oct 30 16:21:12 NOVT 2012
 eclipse.preferences.version=1
-environment/project/cdt.managedbuild.config.gnu.exe.debug.801132969=<?xml version\="1.0" encoding\="UTF-8" standalone\="no"?>\n<environment append\="true" appendContributed\="true">\n<variable delimiter\=";" name\="PPC860_BASE" operation\="append" value\="/home/gulevich/development/bivme2/ppc860"/>\n</environment>\n
-environment/project/cdt.managedbuild.config.gnu.exe.release.660590005=<?xml version\="1.0" encoding\="UTF-8" standalone\="no"?>\n<environment append\="true" appendContributed\="true">\n<variable delimiter\=";" name\="PPC860_BASE" operation\="append" value\="/home/gulevich/development/bivme2/ppc860"/>\n</environment>\n
+environment/project/cdt.managedbuild.config.gnu.exe.debug.801132969=
+environment/project/cdt.managedbuild.config.gnu.exe.debug.801132969/CPPFLAGS/delimiter=\:
+environment/project/cdt.managedbuild.config.gnu.exe.debug.801132969/CPPFLAGS/operation=append
+environment/project/cdt.managedbuild.config.gnu.exe.debug.801132969/CPPFLAGS/value=-O0
+environment/project/cdt.managedbuild.config.gnu.exe.debug.801132969/PPC860_BASE/delimiter=;
+environment/project/cdt.managedbuild.config.gnu.exe.debug.801132969/PPC860_BASE/operation=append
+environment/project/cdt.managedbuild.config.gnu.exe.debug.801132969/PPC860_BASE/value=/home/gulevich/development/bivme2/ppc860
+environment/project/cdt.managedbuild.config.gnu.exe.debug.801132969/append=true
+environment/project/cdt.managedbuild.config.gnu.exe.debug.801132969/appendContributed=true
+environment/project/cdt.managedbuild.config.gnu.exe.release.660590005=
+environment/project/cdt.managedbuild.config.gnu.exe.release.660590005/PPC860_BASE/delimiter=;
+environment/project/cdt.managedbuild.config.gnu.exe.release.660590005/PPC860_BASE/operation=append
+environment/project/cdt.managedbuild.config.gnu.exe.release.660590005/PPC860_BASE/value=/home/gulevich/development/bivme2/ppc860
+environment/project/cdt.managedbuild.config.gnu.exe.release.660590005/append=true
+environment/project/cdt.managedbuild.config.gnu.exe.release.660590005/appendContributed=true

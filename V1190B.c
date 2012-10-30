@@ -490,7 +490,8 @@ Error tdc_setInterruptLine(BusAddr tdcBase, int line, uint16_t vector) {
 	unsigned short line1=line;
 	assert(line>=0);
 	assert(line<=7);
-	if (libvme_write_a32_word(tdcBase+0x1022, -1)!=0) return WRITE_ERROR;
+	//WARN: the following line disables Almost Full level! WTF?
+	//if (libvme_write_a32_word(tdcBase+0x1022, -1)!=0) return WRITE_ERROR;
 	if (libvme_write_a32_word(tdcBase+0x100A, line1)!=0) return WRITE_ERROR;
 	line1=0;
 	if (libvme_read_a32_word(tdcBase+0x100A, &line1)!=0)

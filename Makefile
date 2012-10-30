@@ -10,7 +10,12 @@ INCLUDE += -I$(DIRECT_LIB)
 LDFLAGS += -L$(DIRECT_LIB) -lvmedirect
 CPPFLAGS += $(INCLUDE) 
 
-all: V1190B_server V1190B_trigger
+.PHONY: Debug Release tests
+
+all: V1190B_server2
+
+tests:
+	$(MAKE) -f $(V1190B_BASE)tests/Makefile 
 
 report:
 	@echo V1190B_MAKEFILE=$(V1190B_MAKEFILE)
@@ -18,6 +23,7 @@ report:
 
 clean:
 	rm -f *.o $(TARGET)
+	rm -rf Debug Release 
 
 V1190B_server.o: V1190B.h 
 V1190B_server.o: CPPFLAGS+=-DBUILDDATE="\"$(shell date "+%F %H:%M:%S")\""
@@ -32,13 +38,20 @@ V1190B_server: V1190B_server.o V1190B.o
 	$(CC) -o $@ $^ $(LDFLAGS)
 	$(STRIP) $@
 	
-.PHONY: Debug Release
+DEPGEN=$(CC) -M $(CPPFLAGS) $< | sed 's,\($*\)\[ :]*,\1 $@ : ,g' > $@
+%.cpp.d: %.cpp
+	@$(DEPGEN)
 
-Debug: CPPFLAGS+=-O0
-Release: CPPFLAGS+=-DNDEBUG=1 -O3
- 
-Debug Release:
-	mkdir -p $@ && cd $@ && $(MAKE) -f $(abspath $(V1190B_MAKEFILE)) V1190B_server V1190B_trigger
+UNITS=LibVME V1190B2
+DEPS=$(addsuffix .cpp.d, $(UNITS))
+ifeq "$(filter clean,$(MAKECMDGOALS))" ""
+	-include $(DEPS)
+endif
+
+V1190B_server2: LibVME.o V1190B2.o
+	$(CXX) -o $@ $^ $(LDFLAGS)
+
+	
 	
 %.d: %.c
 	@set -e; rm -f $@; \
@@ -46,7 +59,7 @@ Debug Release:
 	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 	
-upload: Debug
+upload: 
 	scp Debug/V1190B_server beam-daq:~daq/bin
 	
 
