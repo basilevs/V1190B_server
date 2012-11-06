@@ -9,6 +9,7 @@ extern "C" {
 #include <fcntl.h>
 #include <sys/types.h>
 #include <unistd.h> //close
+#include <sstream>
 
 
 using namespace std;
@@ -125,8 +126,9 @@ auto_ptr<InterruptLine> LibVME::openIrqLevel()
 	int i, fdi;
 	char str[40];
 	for(i=1; i<=7; i++) {
-		sprintf(str, IRQFILE, i);
-		fdi = open(str, O_RDONLY);
+		ostringstream tmp;
+		tmp << "/dev/vmei" << i;
+		fdi = open(tmp.str().c_str(), O_RDONLY);
 		if (fdi >= 0) {
 			return auto_ptr<InterruptLine>(new InterruptLine(fdi, i));
 		}
