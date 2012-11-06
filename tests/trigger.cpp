@@ -63,16 +63,17 @@ int main(int argc, char * const argv[])
 		fd_set fdset;
 		FD_ZERO(&fdset);
 		FD_SET(irq->fd(), &fdset);
-		int selectRv = select(irq->fd()+1, &fdset, &fdset, &fdset, &timeout);
+		int selectRv = select(irq->fd()+1, 0, 0, &fdset, &timeout);
 		if (selectRv > 0)
 		{
-			int vector;
+			int vector = irq->readVector();
 			int bytes = read(irq->fd(), &vector, 4);
 			if (bytes != 4) {
 				cerr << "Failed to read interrupt vector" << endl;
 				return 2;
 			} else {
 				cout << "Caught interrupt " << endl;
+				cout << "Vector " << vector << endl;
 				cout << "Event count: " << tdc.bufferedEventsCount() << endl;
 				return 0;
 			}

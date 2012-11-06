@@ -109,7 +109,17 @@ InterruptLine::~InterruptLine() {
 	close(_fd);
 }
 
+int32_t InterruptLine::readVector() const {
+	int32_t vector;
+	int bytes = read(fd(), &vector, 4);
+	if (bytes != 4) {
+		ostringstream tmp;
+		tmp << "Failed to read interrupt vector";
+		throw VmeError(tmp.str());
+	}
+	return vector;
 
+}
 auto_ptr<InterruptLine> LibVME::openIrqLevel()
 {
 	int i, fdi;
