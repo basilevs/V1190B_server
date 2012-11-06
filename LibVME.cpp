@@ -6,6 +6,8 @@ extern "C" {
 #include <assert.h>
 #include <sstream>
 #include <iomanip>
+#include <fcntl.h>
+#include <sys/types.h>
 
 
 using namespace std;
@@ -82,8 +84,38 @@ uint16_t LibVME::read_a32d16(uint32_t address)
 	return rv;
 }
 
+void LibVME::write_a32d32(uint32_t address, uint32_t value)
+{
+	if (libvme_write_a32_dword(address, value)!=0)
+		throw VmeWriteError("Failed to write to VME a32 d32");
+}
+
+uint32_t LibVME::read_a32d32(uint32_t address)
+{
+	uint32_t rv = 0;
+	if (libvme_read_a32_dword(address, &rv)!=0)
+		throw VmeReadError("Failed to write to VME a32 d16");
+	return rv;
+}
+
+#define IRQFILE "/dev/vmei%d"
+
+int LibVME::openIrqLevel()
+{
+	int i, fdi;
+	char str[40];
+	for(i=1; i<=7; i++) {
+		sprintf(str, IRQFILE, i);
+		fdi = open(str, O_RDONLY);
+		if (fdi >= 0) {
+			return fdi;
+		}
+	}
+	throw VmeError("Can't lock IRQ level");
+}
+
 LibVME::~LibVME() {
-	// TODO Auto-generated destructor stub
+	libvme_close();
 }
 
 void LibVME::addressModifier(int am)

@@ -19,6 +19,8 @@ struct VmeWriteError: public VmeError {
 struct IVmeInterface {
 	virtual void write_a32d16(uint32_t address, uint16_t value) = 0;
 	virtual uint16_t read_a32d16(uint32_t address) = 0;
+	virtual void write_a32d32(uint32_t address, uint32_t value) = 0;
+	virtual uint32_t read_a32d32(uint32_t address) = 0;
 	virtual ~IVmeInterface(){}
 };
 

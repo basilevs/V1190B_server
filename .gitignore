@@ -4,3 +4,7 @@ beam_daq
 test_fwrite
 Release
 Debug
+*.cpp.d
+*.o
+interface
+trigger

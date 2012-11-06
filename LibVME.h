@@ -17,6 +17,10 @@ public:
 	int addressModifier();
 	virtual void write_a32d16(uint32_t address, uint16_t value);
 	virtual uint16_t read_a32d16(uint32_t address);
+	virtual void write_a32d32(uint32_t address, uint32_t value);
+	virtual uint32_t read_a32d32(uint32_t address);
+	//Returns opened file descriptor. Caller should close() it after use.
+	int openIrqLevel();
 	virtual ~LibVME();
 };
 

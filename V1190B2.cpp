@@ -1,4 +1,5 @@
 #include "V1190B2.h"
+#include <unistd.h>
 
 const int tries = 100;
 
@@ -25,8 +26,9 @@ void V1190B2::waitOpcode(bool write)
 		}
 		if (ready)
 			return;
+		usleep(10);
 	}
-	throw VmeError("Timeout while waiting for opcode");
+	throw Error("Timeout while waiting for opcode");
 }
 
 void V1190B2::writeOpcode(uint16_t opcode)
@@ -54,6 +56,22 @@ void V1190B2::configureInterrupt(uint8_t level, uint8_t vector)
 	_interface.write_a32d16(_address+0x100A, level);
 	_interface.write_a32d16(_address+0x100C, vector);
 }
+
+bool V1190B2::test()
+{
+	uint32_t data = 10000003;
+	_interface.write_a32d32(_address+0x1200, data);
+	return _interface.read_a32d32(_address+0x1200) == data;
+}
+
+unsigned V1190B2::bufferedEventsCount()
+{
+	return _interface.read_a32d16(_address+0x1020);
+}
+
+
+
+
 
 
 

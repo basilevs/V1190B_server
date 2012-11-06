@@ -10,9 +10,9 @@ INCLUDE += -I$(DIRECT_LIB)
 LDFLAGS += -L$(DIRECT_LIB) -lvmedirect
 CPPFLAGS += $(INCLUDE) 
 
-.PHONY: Debug Release tests
-
 all: V1190B_server2
+
+.PHONY: tests
 
 tests:
 	$(MAKE) -f $(V1190B_BASE)tests/Makefile 

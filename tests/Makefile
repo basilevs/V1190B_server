@@ -10,9 +10,12 @@ LDFLAGS += -L$(DIRECT_LIB) -lvmedirect
 CPPFLAGS += $(INCLUDE) 
 
 
-UNITS = interface LibVME V1190B2
+UNITS = interface trigger LibVME V1190B2
 
-DEPGEN=$(CC) -M $(CPPFLAGS) $< | sed 's,\($*\)\[ :]*,\1 $@ : ,g' > $@
+all: interface trigger
+
+DEPGEN=$(CXX) -M $(CPPFLAGS) $< | sed 's,\($*\)\[ :]*,\1 $@ : ,g' > $@
+
 %.cpp.d: %.cpp
 	@$(DEPGEN)
 DEPS=$(addsuffix .cpp.d, $(UNITS))
@@ -20,10 +23,12 @@ ifeq "$(filter clean,$(MAKECMDGOALS))" ""
 	-include $(DEPS)
 endif
 
-all: interface
 
 interface: interface.o LibVME.o V1190B2.o
-	$(CXX) -o $@ $^ $(LDFLAGS)
+	$(CXX) -static -o $@ $^ $(LDFLAGS)
+	
+trigger: trigger.o  LibVME.o V1190B2.o
+	$(CXX) -static -o $@ $^ $(LDFLAGS)
 
 upload: all
-	scp interface meson:/opt/daq/bin
+	scp trigger interface meson:/opt/daq/bin
