@@ -1,11 +1,11 @@
-#Tue Oct 30 16:21:12 NOVT 2012
+#Tue Nov 06 10:32:32 NOVT 2012
 eclipse.preferences.version=1
 environment/project/cdt.managedbuild.config.gnu.exe.debug.801132969=
 environment/project/cdt.managedbuild.config.gnu.exe.debug.801132969/CPPFLAGS/delimiter=\:
 environment/project/cdt.managedbuild.config.gnu.exe.debug.801132969/CPPFLAGS/operation=append
 environment/project/cdt.managedbuild.config.gnu.exe.debug.801132969/CPPFLAGS/value=-O0
 environment/project/cdt.managedbuild.config.gnu.exe.debug.801132969/PPC860_BASE/delimiter=;
-environment/project/cdt.managedbuild.config.gnu.exe.debug.801132969/PPC860_BASE/operation=append
+environment/project/cdt.managedbuild.config.gnu.exe.debug.801132969/PPC860_BASE/operation=replace
 environment/project/cdt.managedbuild.config.gnu.exe.debug.801132969/PPC860_BASE/value=/home/gulevich/development/bivme2/ppc860
 environment/project/cdt.managedbuild.config.gnu.exe.debug.801132969/append=true
 environment/project/cdt.managedbuild.config.gnu.exe.debug.801132969/appendContributed=true

@@ -3,26 +3,20 @@
 #include <getopt.h>
 #include <iostream>
 #include <stdlib.h>
-#include <unistd.h>
+#include <unistd.h>//read
 
 
 using namespace std;
 
-struct Fd {
-	int fd;
-	Fd(int fdi): fd(fdi) {}
-	~Fd() {
-		if (fd != -1)
-			close(fd);
-	}
-};
+#define xstr(x) astr(x)
+#define astr(x) #x
 
 int main(int argc, char * const argv[])
 {
 	int opt;
 	int level = 1;
 	uint32_t address = 0xEE000000;
-	while((opt = getopt(argc, argv, "hl:a:")) != -1) {
+	while((opt = getopt(argc, argv, "hl:a:v")) != -1) {
 		switch (opt) {
 		case 'l':
 			level = atoi(optarg);
@@ -30,11 +24,15 @@ int main(int argc, char * const argv[])
 		case 'a':
 			address = atol(optarg);
 			break;
+		case 'v':
+			cout << "Built on " << xstr(BUILDDATE) << endl;
+			return 0;
 		case 'h':
 			cout <<
 			"trigger [-h] [-l level] [-a address] \n"
 			"-l level - sets the interrupt level to use\n"
-			"-a address - sets the address of V1190B card being tested\n";
+			"-a address - sets the address of V1190B card being tested\n"
+			"-v         - shows version information\n"
 			"-h         - shows this help\n";
 			return 0;
 		default:
@@ -45,7 +43,8 @@ int main(int argc, char * const argv[])
 	try {
 		IVmeInterface & interface(LibVME::instance());
 		V1190B2 tdc(interface, address);
-		Fd fd(LibVME::instance().openIrqLevel());
+		auto_ptr<LibVME::InterruptLine> irq = LibVME::instance().openIrqLevel();
+
 		tdc.reset();
 		if (!tdc.test()) {
 			cerr << "Test failed" << endl;
@@ -58,22 +57,23 @@ int main(int argc, char * const argv[])
 			return 9;
 		}
 
-		tdc.configureInterrupt(fd.fd, 123);
+		tdc.configureInterrupt(irq->level(), 123);
 
 		struct timeval timeout = {10, 0};
 		fd_set fdset;
 		FD_ZERO(&fdset);
-		FD_SET(fd.fd, &fdset);
-		int selectRv = select(fd.fd+1, &fdset, &fdset, &fdset, &timeout);
+		FD_SET(irq->fd(), &fdset);
+		int selectRv = select(irq->fd()+1, &fdset, &fdset, &fdset, &timeout);
 		if (selectRv > 0)
 		{
 			int vector;
-			int bytes = read(fd.fd, &vector, 4);
+			int bytes = read(irq->fd(), &vector, 4);
 			if (bytes != 4) {
 				cerr << "Failed to read interrupt vector" << endl;
 				return 2;
 			} else {
 				cout << "Caught interrupt " << endl;
+				cout << "Event count: " << tdc.bufferedEventsCount() << endl;
 				return 0;
 			}
 		} else if (selectRv == 0) {

@@ -8,6 +8,7 @@ extern "C" {
 #include <iomanip>
 #include <fcntl.h>
 #include <sys/types.h>
+#include <unistd.h> //close
 
 
 using namespace std;
@@ -100,7 +101,16 @@ uint32_t LibVME::read_a32d32(uint32_t address)
 
 #define IRQFILE "/dev/vmei%d"
 
-int LibVME::openIrqLevel()
+typedef LibVME::InterruptLine InterruptLine;
+
+InterruptLine::InterruptLine(int fd, unsigned level): _fd(fd), _level(level) {}
+
+InterruptLine::~InterruptLine() {
+	close(_fd);
+}
+
+
+auto_ptr<InterruptLine> LibVME::openIrqLevel()
 {
 	int i, fdi;
 	char str[40];
@@ -108,7 +118,7 @@ int LibVME::openIrqLevel()
 		sprintf(str, IRQFILE, i);
 		fdi = open(str, O_RDONLY);
 		if (fdi >= 0) {
-			return fdi;
+			return auto_ptr<InterruptLine>(new InterruptLine(fdi, i));
 		}
 	}
 	throw VmeError("Can't lock IRQ level");

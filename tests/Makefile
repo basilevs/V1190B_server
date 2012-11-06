@@ -7,7 +7,7 @@ VPATH+=$(V1190BT_BASE)/..:$(V1190BT_BASE)
 DIRECT_LIB = $(PPC860_BASE)/linux/apps/bivme2_direct_lib
 INCLUDE += -I$(DIRECT_LIB) -I$(V1190BT_BASE)/..
 LDFLAGS += -L$(DIRECT_LIB) -lvmedirect
-CPPFLAGS += $(INCLUDE) 
+CPPFLAGS += $(INCLUDE) "-DBUILDDATE=$(shell date "+%F %H:%M:%S")"
 
 
 UNITS = interface trigger LibVME V1190B2

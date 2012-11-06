@@ -2,6 +2,7 @@
 #define LIBVME_H_
 
 #include "IVmeInterface.h"
+#include <memory>
 
 class LibVME: public IVmeInterface {
 	int ctl(int);
@@ -19,9 +20,21 @@ public:
 	virtual uint16_t read_a32d16(uint32_t address);
 	virtual void write_a32d32(uint32_t address, uint32_t value);
 	virtual uint32_t read_a32d32(uint32_t address);
-	//Returns opened file descriptor. Caller should close() it after use.
-	int openIrqLevel();
+	class InterruptLine {
+		int _fd;
+		unsigned _level;
+		InterruptLine(const InterruptLine &);
+		InterruptLine & operator=(const InterruptLine &);
+	public:
+		InterruptLine(int fd, unsigned level);
+		~InterruptLine();
+		int32_t readVector() const;
+		int fd() const {return _fd;}
+		unsigned level() const {return _level;}
+	};
+	std::auto_ptr<InterruptLine> openIrqLevel();
 	virtual ~LibVME();
 };
 
 #endif /* LIBVME_H_ */
+
