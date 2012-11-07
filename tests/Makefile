@@ -10,9 +10,9 @@ LDFLAGS += -L$(DIRECT_LIB) -lvmedirect
 CPPFLAGS += $(INCLUDE) "-DBUILDDATE=$(shell date "+%F %H:%M:%S")"
 
 
-UNITS = interface trigger LibVME V1190B2
+UNITS = interface trigger LibVME V1190B2 V1190B2_server
 
-all: interface trigger
+all: interface trigger V1190B2_server
 
 DEPGEN=$(CXX) -M $(CPPFLAGS) $< | sed 's,\($*\)\[ :]*,\1 $@ : ,g' > $@
 
@@ -30,5 +30,8 @@ interface: interface.o LibVME.o V1190B2.o
 trigger: trigger.o  LibVME.o V1190B2.o
 	$(CXX) -static -o $@ $^ $(LDFLAGS)
 
-upload: all
-	scp trigger interface meson:/opt/daq/bin
+V1190B2_server: V1190B2_server.o LibVME.o V1190B2.o CommandProcessor.o
+	$(CXX) -static -o $@ $^ $(LDFLAGS)
+
+upload: trigger interface V1190B2_server
+	scp $^ meson:/opt/daq/bin

@@ -4,7 +4,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <unistd.h>//read
-
+#include "CommandProcessor.h"
 
 using namespace std;
 
@@ -32,7 +32,6 @@ int main(int argc, char * const argv[])
 		case 'h':
 			cout <<
 			"trigger [-h] [-l level] [-a address] \n"
-			"-l level - sets the interrupt level to use\n"
 			"-a address - sets the address of V1190B card being tested\n"
 			"-v         - shows version information\n"
 			"-h         - shows this help\n";
@@ -42,45 +41,44 @@ int main(int argc, char * const argv[])
 			return 1;
 		}
 	}
+
 	try {
 		IVmeInterface & interface(LibVME::instance());
 		V1190B2 tdc(interface, address);
-		auto_ptr<LibVME::InterruptLine> irq = LibVME::instance().openIrqLevel();
 
 		tdc.reset();
 		if (!tdc.test()) {
 			cerr << "Test failed" << endl;
 			return 8;
 		}
+
 		tdc.triggerMode(true);
+		tdc.highSpeedCoreClock();
+		//tdc.highSpeedSerialization();
+		tdc.edgeDetectionMode(2);
+
+		tdc.extendedTriggerTimeTag();
 
 		if (!tdc.triggerMode()) {
 			cerr << "Failed to set trigger mode" <<endl;
 			return 9;
 		}
 
+		auto_ptr<LibVME::InterruptLine> irq = LibVME::instance().openIrqLevel();
 		tdc.configureInterrupt(irq->level(), 123);
 
-		struct timeval timeout = {10, 0};
-		fd_set fdset;
-		FD_ZERO(&fdset);
-		FD_SET(irq->fd(), &fdset);
-		int selectRv = select(irq->fd()+1, 0, 0, &fdset, &timeout);
-		if (selectRv > 0)
-		{
-			int vector = irq->readVector();
-			cout << "Caught interrupt " << endl;
-			cout << "Vector " << vector << endl;
-			cout << "Event count: " << tdc.bufferedEventsCount() << endl;
-			return 0;
-		} else if (selectRv == 0) {
-			cerr << "Select timeout" << endl;
-			cout << "Event count: " << tdc.bufferedEventsCount() << endl;
-			return 7;
-		} else {
-			perror("Select failed");
-			return 3;
+		CommandProcessor processor(tdc, irq->fd());
+
+		while (cin) {
+			string line;
+			getline(cin, line);
+			try {
+				processor.process(line);
+			} catch (CommandProcessor::Error & e) {
+				cout << "Bad command: " << e.what() << endl;
+			}
 		}
+
 	} catch (V1190B2::Error & e) {
 		cerr << "V1190B fail: " << e.what() << endl;
 		return 6;

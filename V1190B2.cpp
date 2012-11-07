@@ -69,6 +69,133 @@ unsigned V1190B2::bufferedEventsCount()
 	return _interface.read_a32d16(_address+0x1020);
 }
 
+void V1190B2::setScanPathSetupBit(unsigned  index, bool isSet)
+{
+	unsigned wordIndex=index/16, wordBit=index%16;
+	uint16_t setupWord = scanPathWord(wordIndex);
+	if (isSet) {
+		setupWord|=(1<<wordBit);
+	} else {
+		setupWord&=~(1<<wordBit);
+	}
+//	eprintf("Word became: %x\n", setupWord);
+	scanPathWord(wordIndex, setupWord);
+}
+
+void V1190B2::loadScanPathSetup()
+{
+	writeOpcode(0x7200);
+}
+
+void V1190B2::edgeDetectionMode(unsigned  mode)
+{
+	if (mode>=4)
+		throw Error("Invalid edge detection mode.");
+	writeOpcode(0x2200);
+	writeOpcode(mode);
+}
+
+void V1190B2::setWindow(int offset, int width)
+{
+	assert(width>=1);
+	assert(width<=4095);
+	assert(offset>=-2048);
+	assert(offset<=40);
+	assert(offset+width<=40);
+	writeOpcode(0x1100);
+	writeOpcode(offset);
+	writeOpcode(0x1000);
+	writeOpcode(width);
+	uint16_t data[5];
+	readTriggerConfiguration(data);
+	assert(data[0] == width);
+#ifndef NDEBUG
+	assert(int(data[1]) == offset);
+#endif
+}
+
+
+
+
+
+void V1190B2::highSpeedSerialization()
+{
+	setScanPathSetupBit(26, 1);
+	loadScanPathSetup();
+}
+
+
+
+void V1190B2::highSpeedCoreClock()
+{
+	setScanPathSetupBit(622, true);
+	setScanPathSetupBit(623, false);
+	loadScanPathSetup();
+}
+
+
+
+
+uint16_t V1190B2::scanPathWord(unsigned index)
+{
+	assert(index<=0x28);
+	writeOpcode(0x7100 + index);
+	return readOpcode();
+}
+
+void V1190B2::scanPathWord(unsigned index, uint16_t word)
+{
+	assert(index<=0x28);
+	writeOpcode(0x7000 + index);
+	writeOpcode(word);
+	assert(scanPathWord(index) == word);
+}
+
+void V1190B2::readTriggerConfiguration(uint16_t *data)
+{
+	writeOpcode(0x1600);
+	for(int i=0; i<5; i++) {
+		data[i] = readOpcode();
+	}
+}
+
+uint32_t V1190B2::read()
+{
+	return _interface.read_a32d32(_address);
+}
+
+uint16_t V1190B2::control()
+{
+	return _interface.read_a32d16(_address+0x1000);
+}
+
+void V1190B2::control(uint16_t value)
+{
+	assert(value & 0x3F == 0);
+	_interface.write_a32d16(_address+0x1000, value);
+	assert(value == control());
+}
+
+void V1190B2::extendedTriggerTimeTag()
+{
+	uint16_t word = control();
+	if (true) {
+		word |= (1 << 9);
+	} else {
+		word &= ~(1 << 9);
+	}
+	control(word);
+}
+
+void V1190B2::clear()
+{
+	_interface.write_a32d16(_address+0x1016, 0);
+}
+
+
+
+
+
 
 
 
