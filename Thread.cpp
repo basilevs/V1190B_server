@@ -7,12 +7,59 @@ Thread::Thread() {
 	_pthread = 0;
 	_interrupt = false;
 }
-static __thread Thread *currentThread = 0;
+
+template<class T>
+class ThreadKey {
+	pthread_key_t _threadKey;
+	T * getSpecificPointer() const {
+		void * stored = pthread_getspecific(_threadKey);
+		return static_cast<T*>(stored);
+	}
+	static void destructor(void * value) {
+		T * stored = static_cast<T*>(stored);
+		assert(stored);
+		delete stored;
+	}
+public:
+	ThreadKey() {
+		_threadKey = 0;
+		if (pthread_key_create(&_threadKey, destructor) != 0)
+			throw std::runtime_error("pthread_key_create failed");
+	}
+	T & getSpecific() const {
+		T * stored = getSpecificPointer();
+		if (!stored)
+			throw std::runtime_error("Nothing was stored in thread local storage under this key.");
+		return *(static_cast<T*>(stored));
+	}
+	void setSpecific(const T & value) {
+		T * stored = getSpecificPointer();
+		if (!stored) {
+			stored = new T(value);
+			if (pthread_setspecific(_threadKey, stored) != 0) {
+				throw std::runtime_error("pthread_setspecific fail.");
+			}
+		} else {
+			*stored = value;
+		}
+	}
+	~ThreadKey() {
+		pthread_key_delete(_threadKey);
+	}
+};
+
+ThreadKey<Thread*> currentThreadKey;
+
+
+
+Thread & Thread::current() {
+	return *currentThreadKey.getSpecific();
+}
 
 void * Thread::pbody(void* d)
 {
 	Thread * thread = static_cast<Thread *>(d);
-	currentThread = thread;
+	currentThreadKey.setSpecific(thread);
 	try {
 		thread->run();
 	} catch (Interrupted &) {
@@ -35,9 +82,7 @@ void Thread::start()
 }
 
 bool Thread::isInterrupted() {
-	if (!currentThread)
-		return false;
-	return currentThread->_interrupt;
+	return current()._interrupt;
 }
 
 void Thread::interrupt() {

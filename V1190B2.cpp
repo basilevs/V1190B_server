@@ -166,12 +166,14 @@ uint32_t V1190B2::read()
 
 uint16_t V1190B2::control()
 {
-	return _interface.read_a32d16(_address+0x1000);
+	uint16_t rv = _interface.read_a32d16(_address+0x1000);
+	assert((rv & ~0x3FF) == 0);
+	return rv;
 }
 
 void V1190B2::control(uint16_t value)
 {
-	assert(value & 0x3F == 0);
+	assert((value & ~0x3FF) == 0);
 	_interface.write_a32d16(_address+0x1000, value);
 	assert(value == control());
 }
@@ -179,11 +181,13 @@ void V1190B2::control(uint16_t value)
 void V1190B2::extendedTriggerTimeTag()
 {
 	uint16_t word = control();
+	assert((word & ~0x3FF) == 0);
 	if (true) {
 		word |= (1 << 9);
 	} else {
 		word &= ~(1 << 9);
 	}
+	assert((word & ~0x3FF) == 0);
 	control(word);
 }
 

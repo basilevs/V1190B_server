@@ -474,6 +474,7 @@ Error tdc_readEvent(BusAddr tdcBase, Event * event) {
 		}
 	//	curr++; //Data is serialized. Always read zero address. There is no need to shift.
 	}
+	return OK:
 }
 
 Error tdc_test(BusAddr tdcBase) {

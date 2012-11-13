@@ -31,7 +31,7 @@ int main(int argc, char * const argv[])
 			return 0;
 		case 'h':
 			cout <<
-			"trigger [-h] [-l level] [-a address] \n"
+			"server [-h] [-l level] [-a address] \n"
 			"-a address - sets the address of V1190B card being tested\n"
 			"-v         - shows version information\n"
 			"-h         - shows this help\n";
@@ -74,10 +74,12 @@ int main(int argc, char * const argv[])
 			getline(cin, line);
 			try {
 				processor.process(line);
+				cout << "#Success" << endl;
 			} catch (CommandProcessor::Error & e) {
-				cout << "Bad command: " << e.what() << endl;
+				cout << "#Error: " << e.what() << endl;
 			}
 		}
+		cout << "Exiting" << endl;
 
 	} catch (V1190B2::Error & e) {
 		cerr << "V1190B fail: " << e.what() << endl;

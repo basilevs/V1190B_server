@@ -1,6 +1,5 @@
 #include "CommandProcessor.h"
 #include <sstream>
-#include <fstream>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -9,6 +8,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <iostream>
+#include "socketbuf.h"
 
 using namespace std;
 
@@ -32,7 +32,7 @@ void CommandProcessor::process(const std::string & line)
 	if (command == "window") {
 		int offset, width;
 		getArgument(istr, offset, "Failed to read offset for window command");
-		getArgument(istr, offset, "Failed to read width for window command");
+		getArgument(istr, width, "Failed to read width for window command");
 		_device.setWindow(offset, width);
 	} else if (command == "clear") {
 		_device.clear();
@@ -46,6 +46,7 @@ void CommandProcessor::process(const std::string & line)
 		getArgument(istr, port, "Failed to read port argument for accept");
 		_thread.reset(); // To close socket
 		_thread.reset(new ProcessingThread(_device, port, _interruptFd));
+		_thread->start();
 	} else {
 		return throw Error(string("Invalid command: ")+command);
 	}
@@ -62,17 +63,19 @@ CommandProcessor::ProcessingThread::ProcessingThread(V1190B2 & device, int port,
 		close(_socket);
 		throw runtime_error(strerror(errno));
 	}
+	listen(_socket,1);
 	start();
 }
 CommandProcessor::ProcessingThread::~ProcessingThread() {
 	close(_socket);
 }
 void CommandProcessor::ProcessingThread::run() {
-	 listen(_socket,1);
 	 int connection = ::accept(_socket, 0, 0);
 	 if (connection < 0)
 		throw runtime_error(strerror(errno));
-	 ofstream output(connection);
+	 socketwrapper sw(connection, true);
+	 socketbuf sb(sw);
+	 ostream output(&sb);
 	 while (true) {
 		Thread::interruption_point();
 		struct timeval timeout = {1, 0};

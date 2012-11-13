@@ -2,6 +2,7 @@
 #define THREAD_H_
 
 #include <pthread.h>
+#include <stdexcept>
 
 class Thread {
 	pthread_t _pthread;
@@ -21,6 +22,9 @@ public:
 		Interrupted(const std::string & message): Error(message) {}
 	};
 	Thread();
+	// Throws std::runtime_error() if called from a thread created bypassing this mechanism
+	// (like main thread or raw posix threads)
+	static Thread & current();
 	void start();
 	void interrupt();
 	void join();
