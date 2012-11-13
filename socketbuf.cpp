@@ -13,6 +13,7 @@
 #include <netinet/tcp.h>
 #include <netdb.h>
 #include <errno.h>
+#include <string.h>
 #include <unistd.h>
 
 #include <iostream>
@@ -100,20 +101,15 @@ typedef socketbuf::int_type int_type;
 
 int_type socketbuf::writeChars(size_t toWriteCount)
 {
-    char_type *begin = this->pbase(), *current = this->pptr(), *end = this->epptr();
-    assert(begin==_oBuffer);
-    assert(end<=_oBuffer+BUFFER_SIZE-1);
-    assert(current>=begin);
-    assert(current<=end);
-    assert(begin+toWriteCount<=end);
     assert(toWriteCount <= size_t(BUFFER_SIZE));
     assert(toWriteCount>0);
+    cerr << "ToWrite: " << toWriteCount << endl;
     int byteCount = _socket.write(_oBuffer, toWriteCount * sizeof (char_type));
     if(byteCount <= 0)
         return traits_type::eof();
 
     char_type lastWrittenCharacter = _oBuffer[byteCount - 1];
-    int bytesLeft = current - _oBuffer - byteCount;
+    int bytesLeft = toWriteCount - byteCount;
     assert(bytesLeft < BUFFER_SIZE);
     memmove(_oBuffer, _oBuffer + byteCount, bytesLeft);
     this->setp(_oBuffer + bytesLeft, _oBuffer + BUFFER_SIZE - 1);
@@ -123,7 +119,8 @@ int_type socketbuf::writeChars(size_t toWriteCount)
 int_type socketbuf::overflow(int_type c)
 {
     char_type *current = this->pptr();
-    assert(current < _oBuffer+BUFFER_SIZE);
+    assert(current <= this->epptr());
+    assert(current <= _oBuffer+BUFFER_SIZE-1);
     *current = traits_type::to_char_type(c); //We can write there as current is still not greater than _oBuffer+BUFFER_SIZE-1
     return writeChars(current - _oBuffer + 1);
 }

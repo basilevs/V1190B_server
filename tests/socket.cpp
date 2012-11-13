@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 #include <iterator>
 #include <iostream>
+#include <memory>
 #include <Thread.h>
 
 using namespace std;
@@ -31,13 +32,22 @@ struct CheckReceived: public Thread {
 	int _socket;
 	string _pattern;
 	CheckReceived(int socket, string pattern): _socket(socket), _pattern(pattern) {}
-	void run() {
+	virtual void run() {
 		string received = acceptAll(_socket);
 		cout << "received: ";
 		printString(cout, received) << endl;
 		assert(_pattern == received);
 	}
 };
+
+std::string operator*(std::string const &s, size_t n)
+{
+    std::string r;  // empty string
+    r.reserve(n * s.size());
+    for (size_t i=0; i<n; i++)
+        r += s;
+    return r;
+}
 
 int main() {
 	sockaddr_in serv_addr;
@@ -54,15 +64,35 @@ int main() {
 	{
 		string pattern = "pattern";
 		CheckReceived rc(s, pattern+pattern);
-		auto_ptr<socketwrapper> sw(socketwrapper::connect("localhost", port));
-		rc.start();
-		sw->write(pattern.c_str(), pattern.size());
-		cout << "Sent: ";
-		printString(cout, pattern) << endl;
-		sleep(1);
-		sw->write(pattern.c_str(), pattern.size());
-		cout << "Sent: ";
-		printString(cout, pattern) << endl;
+		{
+			auto_ptr<socketwrapper> swr(socketwrapper::connect("localhost", port));
+			rc.start();
+			socketbuf sw(*swr);
+			sw.sputn(pattern.c_str(), pattern.size());
+			cout << "Sent: ";
+			printString(cout, pattern) << endl;
+			sleep(1);
+			sw.sputn(pattern.c_str(), pattern.size());
+			cout << "Sent: ";
+			printString(cout, pattern) << endl;
+			sw.pubsync();
+		}
+		rc.join();
+	}
+	{
+		string pattern = "pattern";
+		CheckReceived rc(s, pattern*1000);
+		{
+			auto_ptr<socketwrapper> sw(socketwrapper::connect("localhost", port));
+			rc.start();
+			socketbuf sb(*sw);
+			for (int i = 0; i < 1000; i++)
+				sb.sputn(pattern.c_str(), pattern.size());
+			sb.pubsync();
+			cout << "Sent: ";
+			printString(cout, pattern) << endl;
+		}
+		rc.join();
 	}
 
 }

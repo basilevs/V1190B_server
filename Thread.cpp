@@ -1,5 +1,6 @@
 #include "Thread.h"
 #include <iostream>
+#include <assert.h>
 
 using namespace std;
 
@@ -16,8 +17,8 @@ class ThreadKey {
 		return static_cast<T*>(stored);
 	}
 	static void destructor(void * value) {
-		T * stored = static_cast<T*>(stored);
-		assert(stored);
+		T * stored = static_cast<T*>(value);
+//		clog << "Deleting " << stored << endl;
 		delete stored;
 	}
 public:
@@ -36,13 +37,14 @@ public:
 		T * stored = getSpecificPointer();
 		if (!stored) {
 			stored = new T(value);
+//			clog << "Created " << stored << endl;
 			if (pthread_setspecific(_threadKey, stored) != 0) {
 				throw std::runtime_error("pthread_setspecific fail.");
 			}
 		} else {
+//			clog << "Changed " << stored << endl;
 			*stored = value;
-		}
-	}
+		}	}
 	~ThreadKey() {
 		pthread_key_delete(_threadKey);
 	}
@@ -61,6 +63,8 @@ void * Thread::pbody(void* d)
 	Thread * thread = static_cast<Thread *>(d);
 	currentThreadKey.setSpecific(thread);
 	try {
+		if (thread->_interrupt)
+			return 0;
 		thread->run();
 	} catch (Interrupted &) {
 	} catch (exception & e) {
@@ -71,14 +75,14 @@ void * Thread::pbody(void* d)
 
 void Thread::start()
 {
-	if (_pthread != 0)
-
+	join();
 	_interrupt = false;
 	int rv = pthread_create(&_pthread, 0, pbody, this);
 	if (rv != 0) {
 		_pthread = 0;
 		throw Fail(rv, "Failed to create thread");
 	}
+	assert(_pthread!=0);
 }
 
 bool Thread::isInterrupted() {
@@ -105,9 +109,6 @@ void Thread::interruption_point(const std::string & message)
 }
 
 Thread::~Thread() {
-	interrupt();
-	try {
-		join();
-	} catch(...) {}
+	assert(_pthread==0&&"Unjoined thread destructed.");
 }
 

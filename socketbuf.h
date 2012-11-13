@@ -7,7 +7,6 @@
 
 class ISocketWrapper {
 public:
-	ssize_t fs;
 	struct Error: public std::runtime_error {
 		Error(const std::string & message): runtime_error(message) {}
 	};

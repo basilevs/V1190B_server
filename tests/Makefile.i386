@@ -1,0 +1,33 @@
+V1190BT_MAKEFILE:=$(lastword $(MAKEFILE_LIST))
+V1190BT_BASE=$(dir $(V1190BT_MAKEFILE))
+
+VPATH+=$(V1190BT_BASE)/..:$(V1190BT_BASE)
+
+INCLUDE += -I$(V1190BT_BASE)/..
+CPPFLAGS += $(INCLUDE) -fmessage-length=0 "-DBUILDDATE=$(shell date "+%F %H:%M:%S")" -pthread
+
+UNITS = socket Thread thread socketbuf
+
+CLEAN+=$(addsuffix .o, $(UNITS))
+all: thread socket
+
+DEPGEN=$(CXX) -M $(CPPFLAGS) $< | sed 's,\($*\)\[ :]*,\1 $@ : ,g' > $@
+
+%.cpp.d: %.cpp
+	@$(DEPGEN)
+DEPS=$(addsuffix .cpp.d, $(UNITS))
+CLEAN+=$(DEPS)
+ifeq "$(filter clean,$(MAKECMDGOALS))" ""
+	-include $(DEPS)
+endif
+
+CLEAN+=socket
+socket: socket.o Thread.o socketbuf.o
+	$(CXX) -pthread -static -o $@ $^ $(LDFLAGS)
+	
+thread: thread.o Thread.o socketbuf.o
+	$(CXX) -pthread -static -o $@ $^ $(LDFLAGS)
+
+
+clean:
+	rm -f $(CLEAN)
