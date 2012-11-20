@@ -87,5 +87,8 @@ int main(int argc, char * const argv[])
 	} catch (VmeError & e) {
 		cerr << "Vme bus error: " << e.what() << endl;
 		return 5;
+	} catch (exception & e) {
+		cerr << "Common error: " << e.what() << endl;
+		return 11;
 	}
 }

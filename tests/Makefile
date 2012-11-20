@@ -23,21 +23,29 @@ ifeq "$(filter clean,$(MAKECMDGOALS))" ""
 	-include $(DEPS)
 endif
 
-
 interface: interface.o LibVME.o V1190B2.o
 	$(CXX) -static -o $@ $^ $(LDFLAGS)
+CLEAN+=interface
 	
 trigger: trigger.o  LibVME.o V1190B2.o
 	$(CXX) -static -o $@ $^ $(LDFLAGS)
+CLEAN+=trigger
 
 V1190B2_server: V1190B2_server.o LibVME.o V1190B2.o CommandProcessor.o Thread.o socketbuf.o
 	$(CXX) -pthread -static -o $@ $^ $(LDFLAGS)
+CLEAN+=V1190B2_server
 
 socket: socket.o Thread.o socketbuf.o
 	$(CXX) -pthread -static -o $@ $^ $(LDFLAGS)
+CLEAN+=socket
 
 thread: thread.o Thread.o 
 	$(CXX) -pthread -static -o $@ $^ $(LDFLAGS)
-	
-upload: thread trigger interface V1190B2_server socket
+CLEAN+=thread	
+
+upload: socket thread
 	scp $^ meson:/opt/daq/bin
+	
+clean:
+	rm -f $(addsuffix .o, $(UNITS)) $(DEPS) $(CLEAN)
+	

@@ -23,7 +23,6 @@ report:
 
 clean:
 	rm -f *.o $(TARGET)
-	rm -rf Debug Release 
 
 V1190B_server.o: V1190B.h 
 V1190B_server.o: CPPFLAGS+=-DBUILDDATE="\"$(shell date "+%F %H:%M:%S")\""

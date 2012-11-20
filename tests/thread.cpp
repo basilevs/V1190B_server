@@ -9,11 +9,11 @@
 #include <iostream>
 
 
-class FlagSetter: public Thread {
+class FlagSetter {
 	bool & _flag;
 public:
 	FlagSetter(bool & flag): _flag(flag) {}
-	void run() {
+	void operator()() {
 		_flag = true;
 	}
 };
@@ -21,8 +21,8 @@ public:
 class CycleWaiter: public FlagSetter {
 public:
 	CycleWaiter(bool & flag): FlagSetter(flag) {}
-	void run() {
-		FlagSetter::run();
+	void operator()() {
+		FlagSetter::operator()();
 		for(int i = 0 ; i < 10; ++i) {
 			Thread::interruption_point();
 			sleep(1);
@@ -36,7 +36,8 @@ using namespace std;
 int main() {
 	bool flag = false;
 	{
-		FlagSetter s(flag);
+		FlagSetter t(flag);
+		Thread s(t);
 		flag = false;
 		s.start();
 		sleep(1);
@@ -45,7 +46,8 @@ int main() {
 		s.join();
 	}
 	{
-		CycleWaiter s(flag);
+		CycleWaiter t(flag);
+		Thread s(t);
 		flag=false;
 		s.start();
 		sleep(2);
@@ -54,7 +56,13 @@ int main() {
 			cerr << "Interruption failed" << endl;
 		s.join();
 	}
-
+	{
+		FlagSetter t(flag);
+		Thread s(t);
+		flag = false;
+		s.start();
+	}
+	cerr << "Immediate interruption success" << endl;
 
 	return 0;
 }

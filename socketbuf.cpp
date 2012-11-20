@@ -94,6 +94,7 @@ int socketwrapper::read(char * oBuffer, int length) {
 }
 
 int socketwrapper::write(const char * iBuffer, int length) {
+//    cerr << "Writing " << length << " bytes in socket " << socket() << endl;
 	return ::write(socket(), iBuffer, length);
 }
 
@@ -103,10 +104,13 @@ int_type socketbuf::writeChars(size_t toWriteCount)
 {
     assert(toWriteCount <= size_t(BUFFER_SIZE));
     assert(toWriteCount>0);
-    cerr << "ToWrite: " << toWriteCount << endl;
+    cerr << "Writing " << toWriteCount << " bytes " << endl;
     int byteCount = _socket.write(_oBuffer, toWriteCount * sizeof (char_type));
-    if(byteCount <= 0)
+    cerr << "Wrote " << byteCount << " bytes " << endl;
+    if(byteCount <= 0) {
+    	cerr << "Connection closed" << endl;
         return traits_type::eof();
+    }
 
     char_type lastWrittenCharacter = _oBuffer[byteCount - 1];
     int bytesLeft = toWriteCount - byteCount;

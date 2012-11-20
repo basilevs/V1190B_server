@@ -28,17 +28,29 @@ string acceptAll(int socket) {
 	 return string(istreambuf_iterator<char>(&sb), istreambuf_iterator<char>());
 }
 
-struct CheckReceived: public Thread {
+struct CheckReceived {
 	int _socket;
 	string _pattern;
 	CheckReceived(int socket, string pattern): _socket(socket), _pattern(pattern) {}
-	virtual void run() {
+	void operator()() {
 		string received = acceptAll(_socket);
 		cout << "received: ";
 		printString(cout, received) << endl;
 		assert(_pattern == received);
 	}
 };
+
+struct AcceptAndClose {
+	int _socket;
+	AcceptAndClose(int socket): _socket(socket) {}
+	void operator()() {
+		 int connection = ::accept(_socket, 0, 0);
+		 cerr <<"Connection closing" << endl;
+		 close(connection);
+		 cerr <<"Connection closed" << endl;
+	}
+};
+
 
 std::string operator*(std::string const &s, size_t n)
 {
@@ -61,14 +73,17 @@ int main() {
 		throw runtime_error(strerror(errno));
 	}
 	listen(s,3);
+	if (false)
 	{
 		string pattern = "pattern";
-		CheckReceived rc(s, pattern+pattern);
+		CheckReceived t(s, pattern+pattern);
+		Thread rc(t);
 		{
 			auto_ptr<socketwrapper> swr(socketwrapper::connect("localhost", port));
 			rc.start();
 			socketbuf sw(*swr);
 			sw.sputn(pattern.c_str(), pattern.size());
+			sw.pubsync();
 			cout << "Sent: ";
 			printString(cout, pattern) << endl;
 			sleep(1);
@@ -77,11 +92,33 @@ int main() {
 			printString(cout, pattern) << endl;
 			sw.pubsync();
 		}
+		cout << "Multisend success" << endl;
 		rc.join();
 	}
 	{
 		string pattern = "pattern";
-		CheckReceived rc(s, pattern*1000);
+		AcceptAndClose t(s);
+		Thread rc(t);
+		{
+			auto_ptr<socketwrapper> swr(socketwrapper::connect("localhost", port));
+			socketbuf sw(*swr);
+			rc.start();
+			ostream ostr(&sw);
+			ostr << pattern << flush;
+			sleep(1);
+			while (ostr) {
+				cerr << "Sending" << endl;
+				ostr << pattern << flush;
+				cerr << "Sent" << endl;
+			}
+		}
+		cout << "Connection close handled properly" << endl;
+		rc.join();
+	}
+	{
+		string pattern = "pattern";
+		CheckReceived t(s, pattern*1000);
+		Thread rc(t);
 		{
 			auto_ptr<socketwrapper> sw(socketwrapper::connect("localhost", port));
 			rc.start();

@@ -4,11 +4,6 @@
 
 using namespace std;
 
-Thread::Thread() {
-	_pthread = 0;
-	_interrupt = false;
-}
-
 template<class T>
 class ThreadKey {
 	pthread_key_t _threadKey;
@@ -63,10 +58,12 @@ void * Thread::pbody(void* d)
 	Thread * thread = static_cast<Thread *>(d);
 	currentThreadKey.setSpecific(thread);
 	try {
-		if (thread->_interrupt)
-			return 0;
-		thread->run();
+		cerr << "Thread " << thread->_pthread << " start" << endl;
+		interruption_point();
+		thread->_action->run();
+		cerr << "Thread " << thread->_pthread  << " ended without errors" << endl;
 	} catch (Interrupted &) {
+		cerr << "Thread " << thread->_pthread  << " interrupted " << endl;
 	} catch (exception & e) {
 		cerr << "Unhandled exception: " << e.what() << endl;
 	}
@@ -99,6 +96,7 @@ void Thread::join() {
 	int rv = pthread_join(_pthread, 0);
 	if (rv != 0)
 		throw Fail(rv, "Failed to join thread");
+	cerr << "Thread " << _pthread  << " joined" << endl;
 	_pthread = 0;
 }
 
@@ -109,6 +107,8 @@ void Thread::interruption_point(const std::string & message)
 }
 
 Thread::~Thread() {
+	interrupt();
+	join();
 	assert(_pthread==0&&"Unjoined thread destructed.");
 }
 
