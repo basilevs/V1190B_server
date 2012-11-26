@@ -47,6 +47,6 @@ Debug Release:
 	rm -f $@.$$$$
 	
 upload: Debug
-	scp Debug/V1190B_server beam-daq:~daq/bin
+	scp Debug/V1190B_server beam-daq:/opt/daq/bin
 	
 

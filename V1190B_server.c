@@ -78,7 +78,7 @@ int catch_irq(struct IRQHandler * handler) {
 
 	FD_ZERO(&fdset);
 	FD_SET(fdi, &fdset);
-	if (select(fdi+1, &fdset, 0, 0, &ktimeout) != 0){
+	if (select(fdi+1, 0, 0, &fdset, &ktimeout) != 0){
 		r = read(fdi, &buf, sizeof(unsigned));
 		if (r==0) {
 			//			eprintf("Caught interrupt %d\n", line);
