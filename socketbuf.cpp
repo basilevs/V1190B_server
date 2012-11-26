@@ -73,8 +73,8 @@ socketwrapper * socketwrapper::connect(const Host & host, int port) {
 	}
 	return new socketwrapper(_socket, true);
 }
-inline void dump(ostream & str, char * data, int size, const string & title) {
-	return;
+inline void dump(ostream & str, const char * data, int size, const string & title) {
+//	return;
 	if (size < 0)  {
 		str << "Socket returned negative value" << endl;
 		return;
@@ -89,13 +89,15 @@ inline void dump(ostream & str, char * data, int size, const string & title) {
 
 int socketwrapper::read(char * oBuffer, int length) {
 	int rv = ::read(socket(), oBuffer, length);
-	dump(cerr, oBuffer, length, "low level read");
+	dump(cerr, oBuffer, rv, "low level read");
 	return rv;
 }
 
 int socketwrapper::write(const char * iBuffer, int length) {
-//    cerr << "Writing " << length << " bytes in socket " << socket() << endl;
-	return ::write(socket(), iBuffer, length);
+	cerr << "Trying to write " << length << " bytes\n";
+	int rv = ::send(socket(), iBuffer, length, 0);
+	dump(cerr, iBuffer, rv, "low level write");
+	return rv;
 }
 
 typedef socketbuf::int_type int_type;
@@ -104,9 +106,9 @@ int_type socketbuf::writeChars(size_t toWriteCount)
 {
     assert(toWriteCount <= size_t(BUFFER_SIZE));
     assert(toWriteCount>0);
-    cerr << "Writing " << toWriteCount << " bytes " << endl;
+//    cerr << "Writing " << toWriteCount << " bytes " << endl;
     int byteCount = _socket.write(_oBuffer, toWriteCount * sizeof (char_type));
-    cerr << "Wrote " << byteCount << " bytes " << endl;
+//    cerr << "Wrote " << byteCount << " bytes " << endl;
     if(byteCount <= 0) {
     	cerr << "Connection closed" << endl;
         return traits_type::eof();
@@ -139,11 +141,14 @@ int_type socketbuf::underflow()
     // Move non-read characters to the beginning of the buffer
     int length = end - current;
     memmove(_iBuffer, current, length);
-    int byteCount = _socket.read(_iBuffer + length, (BUFFER_SIZE - length) * sizeof (char_type));
-    if(byteCount <= 0)
+    this->setg(_iBuffer, _iBuffer, _iBuffer + length);
+    int written = _socket.read(_iBuffer + length, (BUFFER_SIZE - length) * sizeof (char_type));
+    if(written <= 0)
         return traits_type::eof();
-
-    this->setg(_iBuffer, _iBuffer, _iBuffer + byteCount + length);
+    length += written;
+    assert(length <= BUFFER_SIZE);
+    this->setg(_iBuffer, _iBuffer, _iBuffer + length);
+    assert(_iBuffer + length == this->egptr());
     return traits_type::to_int_type(_iBuffer[0]);
 }
 

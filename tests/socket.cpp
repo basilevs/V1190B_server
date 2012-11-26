@@ -10,6 +10,7 @@
 #include <iostream>
 #include <memory>
 #include <Thread.h>
+#include <stdio.h> //perror
 
 using namespace std;
 
@@ -20,18 +21,40 @@ ostream & printString(ostream & ostr, const string & value) {
 }
 
 string acceptAll(int socket) {
-	 int connection = ::accept(socket, 0, 0);
-	 if (connection < 0)
+	if (true) {
+		if (true) { //waiting for connection
+			fd_set fdset;
+			FD_ZERO(&fdset);
+			FD_SET(socket, &fdset);
+			struct timeval timeout = {10, 0};
+			int selectRv = select(socket+1, &fdset, 0, 0, &timeout);
+			if (selectRv < 0) {
+				perror("Accept wait failed");
+				return "";
+			} if (selectRv == 0) {
+				cerr << "No client connection in 10 seconds. Port closed." << endl;
+				return "";
+			} else {
+				cerr << "Accept select OK" << endl;
+			}
+
+		}
+	}
+	int connection = ::accept(socket, 0, 0);
+	if (connection < 0)
 		throw runtime_error(strerror(errno));
-	 socketwrapper sw(connection, true);
-	 socketbuf sb(sw);
-	 return string(istreambuf_iterator<char>(&sb), istreambuf_iterator<char>());
+	socketwrapper sw(connection, true);
+	socketbuf sb(sw);
+	return string(istreambuf_iterator<char>(&sb), istreambuf_iterator<char>());
 }
 
 struct CheckReceived {
 	int _socket;
-	string _pattern;
-	CheckReceived(int socket, string pattern): _socket(socket), _pattern(pattern) {}
+	const string & _pattern;
+	CheckReceived(int socket, const string & pattern):
+		_socket(socket),
+		_pattern(pattern)
+	{}
 	void operator()() {
 		string received = acceptAll(_socket);
 		cout << "received: ";
@@ -45,12 +68,14 @@ struct AcceptAndClose {
 	AcceptAndClose(int socket): _socket(socket) {}
 	void operator()() {
 		 int connection = ::accept(_socket, 0, 0);
+		 char x;
+		 read(connection, &x, 1);
 		 cerr <<"Connection closing" << endl;
+		 shutdown(connection,SHUT_RDWR);
 		 close(connection);
 		 cerr <<"Connection closed" << endl;
 	}
 };
-
 
 std::string operator*(std::string const &s, size_t n)
 {
@@ -61,8 +86,12 @@ std::string operator*(std::string const &s, size_t n)
     return r;
 }
 
+void noop(){}
+
 int main() {
 	sockaddr_in serv_addr;
+	const string pattern = "pattern";
+	const string largePattern = pattern*1000;
 	bzero((char *) &serv_addr, sizeof(serv_addr));
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_addr.s_addr = INADDR_ANY;
@@ -72,15 +101,18 @@ int main() {
 		close(s);
 		throw runtime_error(strerror(errno));
 	}
-	listen(s,3);
-	if (false)
+	listen(s,1);
+	if (true) {
+		string a = pattern+pattern;
+		Thread rc(noop);
+	}
+	if (true)
 	{
-		string pattern = "pattern";
-		CheckReceived t(s, pattern+pattern);
+		string a = pattern+pattern;
+		CheckReceived t(s, a);
 		Thread rc(t);
 		{
 			auto_ptr<socketwrapper> swr(socketwrapper::connect("localhost", port));
-			rc.start();
 			socketbuf sw(*swr);
 			sw.sputn(pattern.c_str(), pattern.size());
 			sw.pubsync();
@@ -95,28 +127,32 @@ int main() {
 		cout << "Multisend success" << endl;
 		rc.join();
 	}
-	{
-		string pattern = "pattern";
+	if (true){
 		AcceptAndClose t(s);
 		Thread rc(t);
 		{
 			auto_ptr<socketwrapper> swr(socketwrapper::connect("localhost", port));
+			{
+				timeval timeout = {10, 0};
+				setsockopt(swr->socket(), SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeval));
+			}
 			socketbuf sw(*swr);
 			rc.start();
 			ostream ostr(&sw);
 			ostr << pattern << flush;
 			sleep(1);
+			int i = 0;
 			while (ostr) {
 				cerr << "Sending" << endl;
 				ostr << pattern << flush;
-				cerr << "Sent" << endl;
+				cerr << "Sent " << i << endl;
+				i++;
 			}
 		}
 		cout << "Connection close handled properly" << endl;
 		rc.join();
 	}
-	{
-		string pattern = "pattern";
+	if (false){
 		CheckReceived t(s, pattern*1000);
 		Thread rc(t);
 		{
@@ -131,5 +167,4 @@ int main() {
 		}
 		rc.join();
 	}
-
 }

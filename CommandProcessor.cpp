@@ -13,9 +13,18 @@
 
 using namespace std;
 
-CommandProcessor::CommandProcessor(V1190B2 & device, int interruptFd):_device(device), _interruptFd(interruptFd), _listenSocket(-1) {
+CommandProcessor::CommandProcessor(V1190B2 & device, int interruptFd):
+	_device(device),
+	_interruptFd(interruptFd),
+	_listenSocket(socket(AF_INET, SOCK_STREAM, 0))
+{
+	if( _listenSocket< 0)
+		throw Error(strerror(errno));
 }
 
+CommandProcessor::~CommandProcessor() {
+	close(_listenSocket);
+}
 template<class T>
 void getArgument(istream & istr, T & arg, const string & errorMessage) {
 	istr >> arg;
@@ -64,7 +73,6 @@ void CommandProcessor::process(const std::string & line)
 }
 
 void CommandProcessor::listen(int port) {
-	close(_listenSocket);
 	_listenSocket = socket(AF_INET, SOCK_STREAM, 0);
 	sockaddr_in serv_addr;
 	bzero((char *) &serv_addr, sizeof(serv_addr));
@@ -74,12 +82,28 @@ void CommandProcessor::listen(int port) {
 	if (bind(_listenSocket, (sockaddr*)(&serv_addr),  sizeof(serv_addr)) < 0) {
 		close(_listenSocket);
 		_listenSocket=-1;
-		throw runtime_error(strerror(errno));
+		throw Error(strerror(errno));
 	}
 	::listen(_listenSocket,1);
 }
+
 void CommandProcessor::sendData() {
-	 int connection = ::accept(_listenSocket, 0, 0);
+	if (true) { //waiting for connection
+		fd_set fdset;
+		FD_ZERO(&fdset);
+		FD_SET(_listenSocket, &fdset);
+		struct timeval timeout = {10, 0};
+		int selectRv = select(_listenSocket+1, &fdset, 0, 0, &timeout);
+		if (selectRv < 0) {
+			perror("Accept wait failed");
+			return;
+		} if (selectRv == 0) {
+			cerr << "No client connection in 10 seconds. Port closed." << endl;
+			return;
+		}
+	}
+
+	int connection = ::accept(_listenSocket, 0, 0);
 	 clog << "Connection accepted" << endl;
 	 if (connection < 0)
 		throw runtime_error(strerror(errno));
@@ -107,9 +131,8 @@ void CommandProcessor::sendData() {
 				if (bytes != 4) {
 					cerr << "Failed to read interrupt vector" << endl;
 				} else {
-					cout << "Caught interrupt " << endl;
-					cout << "Vector " << vector << endl;
-					cout << "Event count: " << eventCount << endl;
+					clog << "Caught interrupt: Vector " << vector << "\n";
+					clog << "Event count: " << eventCount << "\n";
 				}
 			}
 			if (eventCount < 0)
@@ -117,11 +140,12 @@ void CommandProcessor::sendData() {
 			try {
 				while (output) {
 					uint32_t word = _device.read();
+					if (word >> 27 == 0x18) //Filler. No more data in output buffer so far.
+						break;
 					output.write((const char *)(&word), sizeof(word));
 				}
-			} catch (VmeReadError &) {
-				cerr << "Event sent"<< endl;
-			}
+			} catch (VmeReadError &) {}
+			cerr << "Event sent\n";
 			output.flush();
 		 }
 	 } catch (...) {

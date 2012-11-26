@@ -5,6 +5,7 @@ VPATH+=$(V1190BT_BASE)/..:$(V1190BT_BASE)
 
 INCLUDE += -I$(V1190BT_BASE)/..
 CPPFLAGS += $(INCLUDE) -fmessage-length=0 "-DBUILDDATE=$(shell date "+%F %H:%M:%S")" -pthread
+LDFLAGS += -pthread 
 
 UNITS = socket Thread thread socketbuf
 
@@ -23,10 +24,10 @@ endif
 
 CLEAN+=socket
 socket: socket.o Thread.o socketbuf.o
-	$(CXX) -pthread -static -o $@ $^ $(LDFLAGS)
+	$(CXX) -o $@ $^ $(LDFLAGS)
 	
 thread: thread.o Thread.o socketbuf.o
-	$(CXX) -pthread -static -o $@ $^ $(LDFLAGS)
+	$(CXX)  -o $@ $^ $(LDFLAGS)
 
 
 clean:

@@ -16,6 +16,7 @@ class Thread {
 		virtual void run() = 0;
 	};
 	std::auto_ptr<Action> _action;
+
 public:
 	struct Error: public std::runtime_error {
 		Error(const std::string & message): runtime_error(message) {}
@@ -29,6 +30,20 @@ public:
 	struct Interrupted: public Error {
 		Interrupted(const std::string & message): Error(message) {}
 	};
+	typedef void (&ActionProcedure)();
+	Thread(ActionProcedure action):
+		_pthread(0),
+		_interrupt(false)
+	{
+		struct ActionImpl: public Action {
+			ActionProcedure  _action;
+			virtual void run() {
+				this->_action();
+			}
+			ActionImpl(const ActionProcedure t): _action(t){}
+		};
+		_action.reset(new ActionImpl(action));
+	}
 	template<class T>
 	Thread(const T & action):
 		_pthread(0),

@@ -55,7 +55,7 @@ public:
 };
 
 class socketbuf: public std::basic_streambuf<char> {
-	static const int BUFFER_SIZE=500;
+	static const int BUFFER_SIZE=400;
 public:
 	typedef std::basic_streambuf<char> Parent;
 	typedef Parent::char_type char_type;

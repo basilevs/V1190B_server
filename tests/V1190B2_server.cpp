@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <unistd.h>//read
 #include "CommandProcessor.h"
+#include <socketbuf.h>
 
 using namespace std;
 
@@ -77,6 +78,8 @@ int main(int argc, char * const argv[])
 				cout << "#Success" << endl;
 			} catch (CommandProcessor::Error & e) {
 				cout << "#Error: " << e.what() << endl;
+			} catch (socketwrapper::Errno & e) {
+				cout << "#Error: " << e.what() << "("<< e.code() <<")" << endl;
 			}
 		}
 		cout << "Exiting" << endl;

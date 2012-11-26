@@ -19,11 +19,7 @@ public:
 	};
 	CommandProcessor(V1190B2 & device, int interruptFd);
 	void process(const std::string & line);
-	virtual ~CommandProcessor(){
-		if (_thread.get())
-			_thread->join();
-
-	}
+	virtual ~CommandProcessor();
 };
 
 #endif /* COMMANDPROCESSOR_H_ */

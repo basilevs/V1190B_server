@@ -28,6 +28,9 @@ public:
 			throw std::runtime_error("Nothing was stored in thread local storage under this key.");
 		return *(static_cast<T*>(stored));
 	}
+	bool hasSpecific() const {
+		return getSpecificPointer() ? true : false;
+	}
 	void setSpecific(const T & value) {
 		T * stored = getSpecificPointer();
 		if (!stored) {
@@ -88,6 +91,7 @@ bool Thread::isInterrupted() {
 
 void Thread::interrupt() {
 	_interrupt = true;
+	cerr << "Interrupting thread " << _pthread << endl;
 }
 
 void Thread::join() {
@@ -107,6 +111,7 @@ void Thread::interruption_point(const std::string & message)
 }
 
 Thread::~Thread() {
+//	cerr << "Thread " << _pthread  << " destructing" << endl;
 	interrupt();
 	join();
 	assert(_pthread==0&&"Unjoined thread destructed.");
