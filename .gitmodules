@@ -1,0 +1,3 @@
+[submodule "sockebuf"]
+	path = sockebuf
+	url = git@github.com:basilevs/socketbuf.git
