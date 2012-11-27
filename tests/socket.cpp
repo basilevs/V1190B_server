@@ -3,6 +3,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <stdlib.h> //system
 #include <errno.h>
 #include <string.h>
 #include <arpa/inet.h>
@@ -11,10 +12,11 @@
 #include <memory>
 #include <Thread.h>
 #include <stdio.h> //perror
+#include <sstream>
 
 using namespace std;
 
-int port = 1066;
+int port = 1100;
 
 ostream & printString(ostream & ostr, const string & value) {
 	return ostr << value << ", length: " << value.size();
@@ -50,7 +52,7 @@ string acceptAll(int socket) {
 
 struct CheckReceived {
 	int _socket;
-	const string & _pattern;
+	string _pattern;
 	CheckReceived(int socket, const string & pattern):
 		_socket(socket),
 		_pattern(pattern)
@@ -102,15 +104,12 @@ int main() {
 		throw runtime_error(strerror(errno));
 	}
 	listen(s,1);
-	if (true) {
-		string a = pattern+pattern;
-		Thread rc(noop);
-	}
 	if (true)
 	{
 		string a = pattern+pattern;
 		CheckReceived t(s, a);
 		Thread rc(t);
+		rc.start();
 		{
 			auto_ptr<socketwrapper> swr(socketwrapper::connect("localhost", port));
 			socketbuf sw(*swr);
@@ -128,8 +127,19 @@ int main() {
 		rc.join();
 	}
 	if (true){
+//		if (fork()) {
+//			ostringstream command;
+//			command << "Debug/listen -p " << port+10;
+//			cout << command.str() << endl;
+//			system(command.str().c_str());
+//			return 0;
+//		}
+//		sleep(1);
+
 		AcceptAndClose t(s);
 		Thread rc(t);
+		rc.start();
+		sleep(1);
 		{
 			auto_ptr<socketwrapper> swr(socketwrapper::connect("localhost", port));
 			{
@@ -137,22 +147,21 @@ int main() {
 				setsockopt(swr->socket(), SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeval));
 			}
 			socketbuf sw(*swr);
-			rc.start();
 			ostream ostr(&sw);
 			ostr << pattern << flush;
-			sleep(1);
 			int i = 0;
+			cerr << "Sending" << endl;
+			errno=0;
 			while (ostr) {
-				cerr << "Sending" << endl;
 				ostr << pattern << flush;
-				cerr << "Sent " << i << endl;
 				i++;
 			}
+			cerr << "Sent " << i*pattern.size() << " bytes" <<  endl;
 		}
-		cout << "Connection close handled properly" << endl;
 		rc.join();
+		cout << "Connection close handled properly: "  << strerror(errno) << endl;
 	}
-	if (false){
+	if (true){
 		CheckReceived t(s, pattern*1000);
 		Thread rc(t);
 		{
@@ -162,9 +171,8 @@ int main() {
 			for (int i = 0; i < 1000; i++)
 				sb.sputn(pattern.c_str(), pattern.size());
 			sb.pubsync();
-			cout << "Sent: ";
-			printString(cout, pattern) << endl;
 		}
 		rc.join();
+
 	}
 }

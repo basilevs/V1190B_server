@@ -19,11 +19,15 @@ public:
 		return 0;
 	}
 	//Returns immediately
-	virtual int send(char * iBuffer, int length) {
+	virtual int send(const char * iBuffer, int length) {
 		return 0;
 	}
 	virtual ~ISocketWrapper() {}
 };
+
+unsigned writeSome(ISocketWrapper & socket, const char * buffer, unsigned min_length, unsigned max_length);
+unsigned readSome(ISocketWrapper & socket, char * buffer, unsigned min_length, unsigned max_length);
+
 
 class socketwrapper: public ISocketWrapper {
 public:
@@ -35,6 +39,8 @@ public:
 	int socket() {return _socket;}
 	int read(char * oBuffer, int length);
 	int write(const char * iBuffer, int length);
+	virtual int recv(char * oBuffer, int length);
+	virtual int send(const char * iBuffer, int length);
 public:
 	class CodeError: public ISocketWrapper::Error {
 		int _code;
@@ -51,11 +57,12 @@ public:
 
 	socketwrapper(int socket, bool own);
 	virtual ~socketwrapper();
+	//Caller owns the returned object.
 	static socketwrapper * connect(const Host & host, int port);
 };
 
 class socketbuf: public std::basic_streambuf<char> {
-	static const int BUFFER_SIZE=400;
+	static const int BUFFER_SIZE=1400;
 public:
 	typedef std::basic_streambuf<char> Parent;
 	typedef Parent::char_type char_type;

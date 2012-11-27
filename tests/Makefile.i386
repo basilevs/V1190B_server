@@ -7,10 +7,10 @@ INCLUDE += -I$(V1190BT_BASE)/..
 CPPFLAGS += $(INCLUDE) -fmessage-length=0 "-DBUILDDATE=$(shell date "+%F %H:%M:%S")" -pthread
 LDFLAGS += -pthread 
 
-UNITS = socket Thread thread socketbuf
+UNITS = socket Thread thread socketbuf listen
 
 CLEAN+=$(addsuffix .o, $(UNITS))
-all: thread socket
+all: thread socket listen
 
 DEPGEN=$(CXX) -M $(CPPFLAGS) $< | sed 's,\($*\)\[ :]*,\1 $@ : ,g' > $@
 
@@ -22,13 +22,20 @@ ifeq "$(filter clean,$(MAKECMDGOALS))" ""
 	-include $(DEPS)
 endif
 
-CLEAN+=socket
-socket: socket.o Thread.o socketbuf.o
-	$(CXX) -o $@ $^ $(LDFLAGS)
-	
-thread: thread.o Thread.o socketbuf.o
-	$(CXX)  -o $@ $^ $(LDFLAGS)
+LINKCOMMAND=$(CXX) -o $@ $^ $(LDFLAGS)
 
+CLEAN+=socket
+
+socket: socket.o Thread.o socketbuf.o
+	$(LINKCOMMAND)
+
+CLEAN+=thread	
+thread: thread.o Thread.o socketbuf.o
+	$(LINKCOMMAND)
+
+CLEAN+=listen
+listen: listen.o 
+	$(LINKCOMMAND)
 
 clean:
 	rm -f $(CLEAN)
