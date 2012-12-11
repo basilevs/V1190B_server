@@ -2,7 +2,7 @@ V1190BT_MAKEFILE:=$(lastword $(MAKEFILE_LIST))
 include $(PPC860_BASE)/linux/apps/Makeconfig
 V1190BT_BASE=$(dir $(V1190BT_MAKEFILE))
 
-VPATH+=$(V1190BT_BASE)/..:$(V1190BT_BASE)
+VPATH+=$(V1190BT_BASE)/..:$(V1190BT_BASE)/../socketbuf:$(V1190BT_BASE)
 
 DIRECT_LIB = $(PPC860_BASE)/linux/apps/bivme2_direct_lib
 INCLUDE += -I$(DIRECT_LIB) -I$(V1190BT_BASE)/..
@@ -43,7 +43,7 @@ thread: thread.o Thread.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 CLEAN+=thread	
 
-upload: socket
+upload: socket V1190B2_server
 	scp $^ meson:/opt/daq/bin
 	
 clean:

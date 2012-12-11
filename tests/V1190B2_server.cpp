@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <unistd.h>//read
 #include "CommandProcessor.h"
-#include <socketbuf.h>
+#include <socketbuf/socketbuf.h>
 
 using namespace std;
 
